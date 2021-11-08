@@ -12,7 +12,9 @@ from typing import Iterator, NamedTuple, Optional
 from tqdm.auto import tqdm
 
 
-class _Error(Enum):
+class Error(Enum):
+    """Type of termination error."""
+
     NONE = auto()
     TERMINATE = auto()
     SYSTEM = auto()
@@ -29,14 +31,14 @@ class _PoolDummy:
         pass
 
 
-errored = _Error.NONE
+errored = Error.NONE
 pool = _PoolDummy()
 
 
 def _sigterm_handler_soft(*_):
     global errored, pool
     print("SIGTERM SOFT!!!")
-    errored = _Error.TERMINATE
+    errored = Error.TERMINATE
     pool.terminate()
     raise KeyboardInterrupt
 
@@ -56,22 +58,24 @@ class TaskFailedError(Exception):
 
 
 class Task(abc.ABC):
+    """Base class defining a set of Tasks to be done."""
+
     def __init__(
         self,
-        debug: bool = False,
-        processes: int = None,
-        no_bar: bool = False,
         description: str = "",
         cluster_id: Optional[int] = None,
         cluster_total: Optional[int] = None,
     ):
-        self.debug = debug
-        self.processes = processes
-        self.no_bar = no_bar
+        """Initialize the class.
+
+        Args:
+            description (str, optional): [description]. Defaults to "".
+            cluster_id (Optional[int], optional): [description]. Defaults to None.
+            cluster_total (Optional[int], optional): [description]. Defaults to None.
+        """
         self.description = description
 
-        self.cluster_id = int(os.getenv("SLURM_ARRAY_TASK_ID", cluster_id + 1)) - 1
-        self.cluster_total = int(os.getenv("SLURM_ARRAY_TASK_MAX", cluster_total))
+        self.cluster_id, self.cluster_total = Task._get_cluster_ids(cluster_id, cluster_total)
 
     @abc.abstractmethod
     def _generate_parameters(self) -> Iterator[TaskParameters]:
@@ -121,6 +125,30 @@ class Task(abc.ABC):
     # Do not override anything past this point
 
     @staticmethod
+    def _get_cluster_ids(
+        cluster_id: Optional[int], cluster_total: Optional[int]
+    ) -> tuple[int, int]:
+        """Get the cluster id and the total number of nodes.
+
+        If the cluster_id and cluster_total are not set, they are obtained from the environment
+        variables passed by the SLURM task scheduler.
+
+        Args:
+            cluster_id (Optional[int]): ID of the current node.
+            cluster_total (Optional[int]): Total number of nodes nodes that we can use in the
+                cluster.
+
+        Returns:
+            tuple[int, int]: Tuple with current cluster ID and total number of nodes.
+        """
+        if cluster_id is None:
+            cluster_id = int(os.getenv("SLURM_ARRAY_TASK_ID", 1)) - 1
+        if cluster_total is None:
+            cluster_total = int(os.getenv("SLURM_ARRAY_TASK_MAX", 1))
+
+        return cluster_id, cluster_total
+
+    @staticmethod
     def _tasks_distribution(total_tasks: int, workers: int) -> list[tuple[int, int]]:
         length = int(math.ceil(total_tasks / workers))
         limit = total_tasks - (length - 1) * workers
@@ -136,7 +164,7 @@ class Task(abc.ABC):
         return task_list
 
     def _obtain_current_fold(self):
-        params = sorted(list(set(self._generate_parameters())))
+        params = sorted(set(self._generate_parameters()))
         task_list = Task._tasks_distribution(len(params), self.cluster_total)
         task_begin, task_end = task_list[self.cluster_id]
 
@@ -152,13 +180,44 @@ class Task(abc.ABC):
 
         return params[task_begin:task_end]
 
-    def execute_tasks(self, make_dirs_only: bool = False) -> _Error:
+    def execute_tasks(
+        self,
+        make_dirs_only: bool = False,
+        debug: bool = False,
+        processes: int = None,
+        no_bar: bool = False,
+    ) -> Error:
+        """Execute all the tasks.
+
+        The tasks are executed in a random order so do not rely on the order and use IDs instead.
+        Even if the order is random, it is consistent across nodes.
+
+        Args:
+            make_dirs_only (bool, optional): If True, only the directories will be created and
+                execution will return. Defaults to False.
+            debug (bool, optional): If True, the execution will be run in debug mode disabling all
+                the parallelism. Defaults to False.
+            processes (int, optional): Number of processes to use. Pass None to use as many as the
+                system has. Defaults to None.
+            no_bar (bool, optional): If True, the progress bar will not be displayed. Defaults to
+                False.
+
+        Raises:
+            KeyboardInterrupt: If a keyboard interrupt is passed, all the tasks are stopped and a
+                KeyboardInterrupt is raised.
+            TaskFailedError: If one of the tasks returns a strange result then a TaskFailedError is
+                raised.
+
+        Returns:
+            Error: The termination result of the tasks. If everything is fine, the result is
+                Error.None.
+        """
         global errored, pool
         params = self._obtain_current_fold()
 
         self._make_dirs()
         if make_dirs_only:
-            return _Error.NONE
+            return Error.NONE
 
         prev_signal = signal.getsignal(signal.SIGTERM)
         if prev_signal is None:
@@ -167,11 +226,11 @@ class Task(abc.ABC):
         if len(params) <= 0:
             print("WARNING: No tasks have to be done, are you sure you did everything right?")
 
-        if self.debug:
+        if debug:
             pool = _PoolDummy()
             generator = map(self._processor_function, params)
         else:
-            pool = mp.Pool(processes=self.processes)
+            pool = mp.Pool(processes=processes)
             generator = pool.imap_unordered(self._processor_function, params)
 
         signal.signal(signal.SIGTERM, _sigterm_handler_soft)
@@ -181,34 +240,34 @@ class Task(abc.ABC):
                 generator,
                 total=len(params),
                 desc=self.description,
-                disable=(len(params) <= 0) or self.no_bar,
+                disable=(len(params) <= 0) or no_bar,
                 smoothing=0.02,
             ):
                 if output is None:
                     # This is a keyboard interrupt
-                    errored = _Error.TERMINATE
+                    errored = Error.TERMINATE
                     pool.terminate()
                     break
                 if self._process_output(output):
                     # This is caused by an actual error while running
-                    errored = _Error.SYSTEM
+                    errored = Error.SYSTEM
                     pool.terminate()
                     break
 
-                if errored != _Error.NONE:
+                if errored != Error.NONE:
                     pool.terminate()
                     break
 
         except KeyboardInterrupt:
-            errored = _Error.TERMINATE
+            errored = Error.TERMINATE
 
-        if errored != _Error.NONE:
+        if errored != Error.NONE:
             pool.terminate()
             pool.join()
-            if errored == _Error.TERMINATE:
+            if errored == Error.TERMINATE:
                 self._key_interrupt()
                 raise KeyboardInterrupt
-            elif errored == _Error.SYSTEM:
+            elif errored == Error.SYSTEM:
                 raise TaskFailedError("System returned non 0 exit code")
 
         pool.close()
