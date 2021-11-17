@@ -20,7 +20,7 @@ jobs:
       - name: Deploy to GitHub pages
         uses: crazy-max/ghaction-github-pages@v2
         with:
-          target_branch: gh-pages
+          keep_history: true
           build_dir: doc/build/html
           jekyll: false
         env:

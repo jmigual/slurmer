@@ -23,7 +23,7 @@ copyright = "2021, Joan Marcè i Igual"
 author = "Joan Marcè i Igual"
 
 # The full version, including alpha/beta/rc tags
-release = "v1.0.3"
+release = "v1.0.4"
 
 
 # -- General configuration ---------------------------------------------------
