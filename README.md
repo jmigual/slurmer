@@ -2,8 +2,8 @@
 
 This package is designed to run heavy loads in a computer cluster. Supported task schedulers are:
 
-    - Running on a single node
-    - [SLURM](https://slurm.schedmd.com/documentation.html)
+- Running on a single node
+- [SLURM](https://slurm.schedmd.com/documentation.html)
 
 PRs to add more schedulers are welcome.
 
