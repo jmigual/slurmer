@@ -1,0 +1,23 @@
+name: CI and CD
+
+on:
+  push:
+    branches:
+       - main
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - uses: Gr1N/setup-poetry@v7
+      - run: npm install gh-pages
+      - run: poetry install
+      - run: poetry run python doc/build.py
+  

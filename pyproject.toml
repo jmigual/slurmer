@@ -2,7 +2,7 @@
 name = "slurmer"
 version = "1.0.0"
 description = "A package to schedule different tasks in parallel with cluster support."
-authors = ["Joan Marcè i Igual <jmigual@users.noreply.github.com>"]
+authors = ["Joan Marcè i Igual <J.Marce.i.Igual@tue.nl>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
