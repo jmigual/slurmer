@@ -1,0 +1,22 @@
+slurmer package
+===============
+
+.. automodule:: slurmer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :exclude-members: _source,_asdict,_fields,_field_defaults,_field_types,_replace,_make:
+
+Submodules
+----------
+
+slurmer.task\_runner module
+---------------------------
+
+.. automodule:: slurmer.task_runner
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :inherited-members:
+   :exclude-members: _source,_asdict,_fields,_field_defaults,_field_types,_replace,_make:

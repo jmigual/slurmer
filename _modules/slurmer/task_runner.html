@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>slurmer.task_runner &mdash; slurmer v1.0.3 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> slurmer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">slurmer</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">slurmer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>slurmer.task_runner</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for slurmer.task_runner</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">auto</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+
+<div class="viewcode-block" id="Error"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Error">[docs]</a><span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type of termination error.&quot;&quot;&quot;</span>
+
+    <span class="c1">#: No error occurred during execution</span>
+    <span class="n">NONE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="c1">#: A keyboard interrupt was received</span>
+    <span class="n">TERMINATE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="c1">#: A task produced and undesired output</span>
+    <span class="n">SYSTEM</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<span class="k">class</span> <span class="nc">_PoolDummy</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+
+<span class="n">errored</span> <span class="o">=</span> <span class="n">Error</span><span class="o">.</span><span class="n">NONE</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">_PoolDummy</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_sigterm_handler_soft</span><span class="p">(</span><span class="o">*</span><span class="n">_</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">errored</span><span class="p">,</span> <span class="n">pool</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SIGTERM SOFT!!!&quot;</span><span class="p">)</span>
+    <span class="n">errored</span> <span class="o">=</span> <span class="n">Error</span><span class="o">.</span><span class="n">TERMINATE</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+    <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
+
+
+<div class="viewcode-block" id="TaskParameters"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.TaskParameters">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">TaskParameters</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Data class containing the parameters that should be used by a task.</span>
+
+<span class="sd">    Inherit this class to add parameters to your task.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="TaskResult"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.TaskResult">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">TaskResult</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Data class containing the result of a task.</span>
+
+<span class="sd">    Inherit this class to add results to your task.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        You can inherit this class as follows:</span>
+
+<span class="sd">        .. code-block:: python</span>
+<span class="sd">            :linenos:</span>
+
+<span class="sd">            from dataclass import dataclass</span>
+<span class="sd">            from slurmer import TaskResult</span>
+
+<span class="sd">            @dataclass</span>
+<span class="sd">            class MyTaskResult(TaskResult):</span>
+<span class="sd">                my_result: int</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="TaskFailedError"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.TaskFailedError">[docs]</a><span class="k">class</span> <span class="nc">TaskFailedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception thrown if one of the tasks fails.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Task"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task">[docs]</a><span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class defining a set of Tasks to be done.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cluster_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cluster_total</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the class.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cluster_id: Id of the current node in the cluster, if None</span>
+<span class="sd">                the value is read from SLURM environment variable SLURM_ARRAY_TASK_ID. Defaults to</span>
+<span class="sd">                None.</span>
+<span class="sd">            cluster_total (Optional[int], optional): Number of allocated nodes in the cluster, if</span>
+<span class="sd">                None the value is read from the SLURM environment variable SLURM_ARRAY_TASK_MAX.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cluster_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_total</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">get_cluster_ids</span><span class="p">(</span><span class="n">cluster_id</span><span class="p">,</span> <span class="n">cluster_total</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Task.generate_parameters"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.generate_parameters">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">generate_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TaskParameters</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Generate all the parameters for the different tasks to run.</span>
+
+<span class="sd">        This function **must be implemented**. It should return an iterator over all the parameters</span>
+<span class="sd">        that should be passed to the processor_function(). The number of tasks to run is determined</span>
+<span class="sd">        by the number of parameters returned by this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Task.make_dirs"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.make_dirs">[docs]</a>    <span class="k">def</span> <span class="nf">make_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make directories before execution.</span>
+
+<span class="sd">        If some directories need to be created before executing the tasks, inherit this method and</span>
+<span class="sd">        create the directories here. *Override this function to add some behaviour*.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Task.processor_function"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.processor_function">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">processor_function</span><span class="p">(</span><span class="n">parameters</span><span class="p">:</span> <span class="n">TaskParameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TaskResult</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Execute the task.</span>
+
+<span class="sd">        This function **must be implemented**. Here you can run the task that you want to run.</span>
+<span class="sd">        It should return a TaskResult if the execution worked as expected (even if it&#39;s just an</span>
+<span class="sd">        empty object), None if the execution failed and execution should be terminated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Task.process_output"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.process_output">[docs]</a>    <span class="k">def</span> <span class="nf">process_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">TaskResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Process the generated output.</span>
+
+<span class="sd">        Process the output generated with _processor_function() and evaluate whether execution</span>
+<span class="sd">        should be terminated. Override this method if the default behaviour (return False) should</span>
+<span class="sd">        be changed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            result (TaskResult): Result of the task as returned by the _processor_function()</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the execution should be terminated, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Task.after_run"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.after_run">[docs]</a>    <span class="k">def</span> <span class="nf">after_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle results after running tasks.</span>
+
+<span class="sd">        Override this method to handle results after everything has been run. Keep in mind that</span>
+<span class="sd">        this is run after all the tasks of this fold have been run but that in another node they</span>
+<span class="sd">        may still be running.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Task.key_interrupt"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.key_interrupt">[docs]</a>    <span class="k">def</span> <span class="nf">key_interrupt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override this method to handle the status after a keyboard interrupt.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># Do not override anything past this point</span>
+
+<div class="viewcode-block" id="Task.get_cluster_ids"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.get_cluster_ids">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_cluster_ids</span><span class="p">(</span><span class="n">cluster_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">cluster_total</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Get the cluster id and the total number of nodes.</span>
+
+<span class="sd">        If the cluster_id and cluster_total are not set, they are obtained from the environment</span>
+<span class="sd">        variables passed by the SLURM task scheduler.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cluster_id (Optional[int]): ID of the current node.</span>
+<span class="sd">            cluster_total (Optional[int]): Total number of nodes nodes that we can use in the</span>
+<span class="sd">                cluster.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[int, int]: Tuple with current cluster ID and total number of nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cluster_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cluster_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SLURM_ARRAY_TASK_ID&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">cluster_total</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cluster_total</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SLURM_ARRAY_TASK_MAX&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">cluster_id</span><span class="p">,</span> <span class="n">cluster_total</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_tasks_distribution</span><span class="p">(</span><span class="n">total_tasks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">workers</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_tasks</span> <span class="o">/</span> <span class="n">workers</span><span class="p">))</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">total_tasks</span> <span class="o">-</span> <span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">workers</span>
+
+        <span class="n">task_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">prev_end</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">workers</span><span class="p">):</span>
+            <span class="n">task_begin</span> <span class="o">=</span> <span class="n">prev_end</span>
+            <span class="n">task_end</span> <span class="o">=</span> <span class="n">task_begin</span> <span class="o">+</span> <span class="n">length</span> <span class="o">-</span> <span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">limit</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">task_end</span> <span class="o">=</span> <span class="n">prev_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">task_end</span><span class="p">,</span> <span class="n">total_tasks</span><span class="p">)</span>
+            <span class="n">task_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">task_begin</span><span class="p">,</span> <span class="n">task_end</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">task_list</span>
+
+    <span class="k">def</span> <span class="nf">_obtain_current_fold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generate_parameters</span><span class="p">()))</span>
+        <span class="n">task_list</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">_tasks_distribution</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_total</span><span class="p">)</span>
+        <span class="n">task_begin</span><span class="p">,</span> <span class="n">task_end</span> <span class="o">=</span> <span class="n">task_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster_id</span><span class="p">]</span>
+
+        <span class="c1"># Shuffle in order to have big tasks matched with small ones in order to save memory</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_total</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running fold </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster_id</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster_total</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task_begin</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">task_end</span><span class="si">}</span><span class="s2"> tasks will be run instead of the whole </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">params</span><span class="p">[</span><span class="n">task_begin</span><span class="p">:</span><span class="n">task_end</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Task.execute_tasks"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.execute_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">execute_tasks</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">make_dirs_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">processes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_bar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Error</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Execute all the tasks.</span>
+
+<span class="sd">        The tasks are executed in a random order so do not rely on the order and use IDs instead.</span>
+<span class="sd">        Even if the order is random, it is consistent across nodes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            make_dirs_only (bool, optional): If True, only the directories will be created and</span>
+<span class="sd">                execution will return. Defaults to False.</span>
+<span class="sd">            debug (bool, optional): If True, the execution will be run in debug mode disabling all</span>
+<span class="sd">                the parallelism. Defaults to False.</span>
+<span class="sd">            processes (int, optional): Number of processes to use. Pass None to use as many as the</span>
+<span class="sd">                system has. Defaults to None.</span>
+<span class="sd">            no_bar (bool, optional): If True, the progress bar will not be displayed. Defaults to</span>
+<span class="sd">                False.</span>
+<span class="sd">            description (str, optional): Description of the task. Defaults to &quot;&quot;.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            KeyboardInterrupt: If a keyboard interrupt is passed, all the tasks are stopped and a</span>
+<span class="sd">                KeyboardInterrupt is raised.</span>
+<span class="sd">            TaskFailedError: If one of the tasks returns a strange result then a TaskFailedError is</span>
+<span class="sd">                raised.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Error: The termination result of the tasks. If everything is fine, the result is</span>
+<span class="sd">            Error.None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">global</span> <span class="n">errored</span><span class="p">,</span> <span class="n">pool</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obtain_current_fold</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_dirs</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">make_dirs_only</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Error</span><span class="o">.</span><span class="n">NONE</span>
+
+        <span class="n">prev_signal</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">getsignal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prev_signal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prev_signal</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_DFL</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: No tasks have to be done, are you sure you did everything right?&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="n">pool</span> <span class="o">=</span> <span class="n">_PoolDummy</span><span class="p">()</span>
+            <span class="n">generator</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">processor_function</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">processes</span><span class="p">)</span>
+            <span class="n">generator</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">imap_unordered</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">processor_function</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">_sigterm_handler_soft</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+                <span class="n">generator</span><span class="p">,</span>
+                <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">),</span>
+                <span class="n">desc</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+                <span class="n">disable</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">no_bar</span><span class="p">,</span>
+                <span class="n">smoothing</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># This is a keyboard interrupt</span>
+                    <span class="n">errored</span> <span class="o">=</span> <span class="n">Error</span><span class="o">.</span><span class="n">TERMINATE</span>
+                    <span class="n">pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_output</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+                    <span class="c1"># This is caused by an actual error while running</span>
+                    <span class="n">errored</span> <span class="o">=</span> <span class="n">Error</span><span class="o">.</span><span class="n">SYSTEM</span>
+                    <span class="n">pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                    <span class="k">break</span>
+
+                <span class="k">if</span> <span class="n">errored</span> <span class="o">!=</span> <span class="n">Error</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
+                    <span class="n">pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                    <span class="k">break</span>
+
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="n">errored</span> <span class="o">=</span> <span class="n">Error</span><span class="o">.</span><span class="n">TERMINATE</span>
+
+        <span class="k">if</span> <span class="n">errored</span> <span class="o">!=</span> <span class="n">Error</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">errored</span> <span class="o">==</span> <span class="n">Error</span><span class="o">.</span><span class="n">TERMINATE</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">key_interrupt</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
+            <span class="k">elif</span> <span class="n">errored</span> <span class="o">==</span> <span class="n">Error</span><span class="o">.</span><span class="n">SYSTEM</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TaskFailedError</span><span class="p">(</span><span class="s2">&quot;System returned non 0 exit code&quot;</span><span class="p">)</span>
+
+        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">after_run</span><span class="p">()</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">prev_signal</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">errored</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Joan Marcè i Igual.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

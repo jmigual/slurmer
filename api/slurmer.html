@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>slurmer package &mdash; slurmer v1.0.3 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="slurmer" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> slurmer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">slurmer</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">slurmer package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-slurmer.task_runner">slurmer.task_runner module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">slurmer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">slurmer</a> &raquo;</li>
+      <li>slurmer package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/slurmer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-slurmer">
+<span id="slurmer-package"></span><h1>slurmer package<a class="headerlink" href="#module-slurmer" title="Permalink to this headline"></a></h1>
+<p>Slurmer package.</p>
+<dl class="simple">
+<dt>Use this package to run tasks in a computing cluster. Supported task schedulers are:</dt><dd><ul class="simple">
+<li><p><a class="reference external" href="https://slurm.schedmd.com/documentation.html">SLURM</a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="slurmer.Task">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/abc.html#abc.ABC" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base class defining a set of Tasks to be done.</p>
+<p>Initialize the class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_id</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – Id of the current node in the cluster, if None
+the value is read from SLURM environment variable SLURM_ARRAY_TASK_ID. Defaults to
+None.</p></li>
+<li><p><strong>cluster_total</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em><em>, </em><em>optional</em>) – Number of allocated nodes in the cluster, if
+None the value is read from the SLURM environment variable SLURM_ARRAY_TASK_MAX.
+Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.generate_parameters">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">generate_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.generate_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.generate_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>Generate all the parameters for the different tasks to run.</p>
+<p>This function <strong>must be implemented</strong>. It should return an iterator over all the parameters
+that should be passed to the processor_function(). The number of tasks to run is determined
+by the number of parameters returned by this method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Iterator" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference internal" href="#slurmer.task_runner.TaskParameters" title="slurmer.task_runner.TaskParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskParameters</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.make_dirs">
+<span class="sig-name descname"><span class="pre">make_dirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.make_dirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.make_dirs" title="Permalink to this definition"></a></dt>
+<dd><p>Make directories before execution.</p>
+<p>If some directories need to be created before executing the tasks, inherit this method and
+create the directories here. <em>Override this function to add some behaviour</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.processor_function">
+<em class="property"><span class="pre">abstract</span> <span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">processor_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.processor_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.processor_function" title="Permalink to this definition"></a></dt>
+<dd><p>Execute the task.</p>
+<p>This function <strong>must be implemented</strong>. Here you can run the task that you want to run.
+It should return a TaskResult if the execution worked as expected (even if it’s just an
+empty object), None if the execution failed and execution should be terminated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#slurmer.task_runner.TaskResult" title="slurmer.task_runner.TaskResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskResult</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.process_output">
+<span class="sig-name descname"><span class="pre">process_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.process_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.process_output" title="Permalink to this definition"></a></dt>
+<dd><p>Process the generated output.</p>
+<p>Process the output generated with _processor_function() and evaluate whether execution
+should be terminated. Override this method if the default behaviour (return False) should
+be changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>result</strong> (<a class="reference internal" href="#slurmer.TaskResult" title="slurmer.TaskResult"><em>TaskResult</em></a>) – Result of the task as returned by the _processor_function()</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the execution should be terminated, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.after_run">
+<span class="sig-name descname"><span class="pre">after_run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.after_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.after_run" title="Permalink to this definition"></a></dt>
+<dd><p>Handle results after running tasks.</p>
+<p>Override this method to handle results after everything has been run. Keep in mind that
+this is run after all the tasks of this fold have been run but that in another node they
+may still be running.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.key_interrupt">
+<span class="sig-name descname"><span class="pre">key_interrupt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.key_interrupt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.key_interrupt" title="Permalink to this definition"></a></dt>
+<dd><p>Override this method to handle the status after a keyboard interrupt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.get_cluster_ids">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">get_cluster_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_total</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.get_cluster_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.get_cluster_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Get the cluster id and the total number of nodes.</p>
+<p>If the cluster_id and cluster_total are not set, they are obtained from the environment
+variables passed by the SLURM task scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_id</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em>) – ID of the current node.</p></li>
+<li><p><strong>cluster_total</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em>) – Total number of nodes nodes that we can use in the
+cluster.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple with current cluster ID and total number of nodes.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)">int</a>, <a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.Task.execute_tasks">
+<span class="sig-name descname"><span class="pre">execute_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_dirs_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.execute_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.Task.execute_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Execute all the tasks.</p>
+<p>The tasks are executed in a random order so do not rely on the order and use IDs instead.
+Even if the order is random, it is consistent across nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>make_dirs_only</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, only the directories will be created and
+execution will return. Defaults to False.</p></li>
+<li><p><strong>debug</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, the execution will be run in debug mode disabling all
+the parallelism. Defaults to False.</p></li>
+<li><p><strong>processes</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Number of processes to use. Pass None to use as many as the
+system has. Defaults to None.</p></li>
+<li><p><strong>no_bar</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, the progress bar will not be displayed. Defaults to
+False.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>, </em><em>optional</em>) – Description of the task. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3.7/library/exceptions.html#KeyboardInterrupt" title="(in Python v3.7)"><strong>KeyboardInterrupt</strong></a> – If a keyboard interrupt is passed, all the tasks are stopped and a
+    KeyboardInterrupt is raised.</p></li>
+<li><p><a class="reference internal" href="#slurmer.TaskFailedError" title="slurmer.TaskFailedError"><strong>TaskFailedError</strong></a> – If one of the tasks returns a strange result then a TaskFailedError is
+    raised.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The termination result of the tasks. If everything is fine, the result is
+Error.None.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#slurmer.task_runner.Error" title="slurmer.task_runner.Error">Error</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="slurmer.TaskFailedError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">TaskFailedError</span></span><a class="reference internal" href="../_modules/slurmer/task_runner.html#TaskFailedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.TaskFailedError" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/exceptions.html#Exception" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Exception thrown if one of the tasks fails.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="slurmer.TaskFailedError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#slurmer.TaskFailedError.args" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.TaskFailedError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slurmer.TaskFailedError.with_traceback" title="Permalink to this definition"></a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="slurmer.TaskParameters">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">TaskParameters</span></span><a class="reference internal" href="../_modules/slurmer/task_runner.html#TaskParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.TaskParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Data class containing the parameters that should be used by a task.</p>
+<p>Inherit this class to add parameters to your task.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="slurmer.TaskResult">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">TaskResult</span></span><a class="reference internal" href="../_modules/slurmer/task_runner.html#TaskResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.TaskResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Data class containing the result of a task.</p>
+<p>Inherit this class to add results to your task.</p>
+<p class="rubric">Example</p>
+<p>You can inherit this class as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span> <span class="nn">dataclass</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="linenos">2</span><span class="kn">from</span> <span class="nn">slurmer</span> <span class="kn">import</span> <span class="n">TaskResult</span>
+<span class="linenos">3</span>
+<span class="linenos">4</span><span class="nd">@dataclass</span>
+<span class="linenos">5</span><span class="k">class</span> <span class="nc">MyTaskResult</span><span class="p">(</span><span class="n">TaskResult</span><span class="p">):</span>
+<span class="linenos">6</span>    <span class="n">my_result</span><span class="p">:</span> <span class="nb">int</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</section>
+<section id="module-slurmer.task_runner">
+<span id="slurmer-task-runner-module"></span><h2>slurmer.task_runner module<a class="headerlink" href="#module-slurmer.task_runner" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="slurmer.task_runner.Error">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Error" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/enum.html#enum.Enum" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Type of termination error.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="slurmer.task_runner.Error.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#slurmer.task_runner.Error.NONE" title="Permalink to this definition"></a></dt>
+<dd><p>No error occurred during execution</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="slurmer.task_runner.Error.TERMINATE">
+<span class="sig-name descname"><span class="pre">TERMINATE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#slurmer.task_runner.Error.TERMINATE" title="Permalink to this definition"></a></dt>
+<dd><p>A keyboard interrupt was received</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="slurmer.task_runner.Error.SYSTEM">
+<span class="sig-name descname"><span class="pre">SYSTEM</span></span><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#slurmer.task_runner.Error.SYSTEM" title="Permalink to this definition"></a></dt>
+<dd><p>A task produced and undesired output</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="slurmer.task_runner.TaskParameters">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">TaskParameters</span></span><a class="reference internal" href="../_modules/slurmer/task_runner.html#TaskParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.TaskParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Data class containing the parameters that should be used by a task.</p>
+<p>Inherit this class to add parameters to your task.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="slurmer.task_runner.TaskResult">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">TaskResult</span></span><a class="reference internal" href="../_modules/slurmer/task_runner.html#TaskResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.TaskResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Data class containing the result of a task.</p>
+<p>Inherit this class to add results to your task.</p>
+<p class="rubric">Example</p>
+<p>You can inherit this class as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span> <span class="nn">dataclass</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="linenos">2</span><span class="kn">from</span> <span class="nn">slurmer</span> <span class="kn">import</span> <span class="n">TaskResult</span>
+<span class="linenos">3</span>
+<span class="linenos">4</span><span class="nd">@dataclass</span>
+<span class="linenos">5</span><span class="k">class</span> <span class="nc">MyTaskResult</span><span class="p">(</span><span class="n">TaskResult</span><span class="p">):</span>
+<span class="linenos">6</span>    <span class="n">my_result</span><span class="p">:</span> <span class="nb">int</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="slurmer.task_runner.TaskFailedError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">TaskFailedError</span></span><a class="reference internal" href="../_modules/slurmer/task_runner.html#TaskFailedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.TaskFailedError" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/exceptions.html#Exception" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Exception thrown if one of the tasks fails.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="slurmer.task_runner.TaskFailedError.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#slurmer.task_runner.TaskFailedError.args" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.TaskFailedError.with_traceback">
+<span class="sig-name descname"><span class="pre">with_traceback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#slurmer.task_runner.TaskFailedError.with_traceback" title="Permalink to this definition"></a></dt>
+<dd><p>Exception.with_traceback(tb) –
+set self.__traceback__ to tb and return self.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.7/library/abc.html#abc.ABC" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base class defining a set of Tasks to be done.</p>
+<p>Initialize the class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_id</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – Id of the current node in the cluster, if None
+the value is read from SLURM environment variable SLURM_ARRAY_TASK_ID. Defaults to
+None.</p></li>
+<li><p><strong>cluster_total</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em><em>, </em><em>optional</em>) – Number of allocated nodes in the cluster, if
+None the value is read from the SLURM environment variable SLURM_ARRAY_TASK_MAX.
+Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.generate_parameters">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">generate_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.generate_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.generate_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>Generate all the parameters for the different tasks to run.</p>
+<p>This function <strong>must be implemented</strong>. It should return an iterator over all the parameters
+that should be passed to the processor_function(). The number of tasks to run is determined
+by the number of parameters returned by this method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Iterator" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference internal" href="#slurmer.task_runner.TaskParameters" title="slurmer.task_runner.TaskParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskParameters</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.make_dirs">
+<span class="sig-name descname"><span class="pre">make_dirs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.make_dirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.make_dirs" title="Permalink to this definition"></a></dt>
+<dd><p>Make directories before execution.</p>
+<p>If some directories need to be created before executing the tasks, inherit this method and
+create the directories here. <em>Override this function to add some behaviour</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.processor_function">
+<em class="property"><span class="pre">abstract</span> <span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">processor_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.processor_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.processor_function" title="Permalink to this definition"></a></dt>
+<dd><p>Execute the task.</p>
+<p>This function <strong>must be implemented</strong>. Here you can run the task that you want to run.
+It should return a TaskResult if the execution worked as expected (even if it’s just an
+empty object), None if the execution failed and execution should be terminated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#slurmer.task_runner.TaskResult" title="slurmer.task_runner.TaskResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskResult</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.process_output">
+<span class="sig-name descname"><span class="pre">process_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.process_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.process_output" title="Permalink to this definition"></a></dt>
+<dd><p>Process the generated output.</p>
+<p>Process the output generated with _processor_function() and evaluate whether execution
+should be terminated. Override this method if the default behaviour (return False) should
+be changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>result</strong> (<a class="reference internal" href="#slurmer.task_runner.TaskResult" title="slurmer.task_runner.TaskResult"><em>TaskResult</em></a>) – Result of the task as returned by the _processor_function()</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the execution should be terminated, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.after_run">
+<span class="sig-name descname"><span class="pre">after_run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.after_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.after_run" title="Permalink to this definition"></a></dt>
+<dd><p>Handle results after running tasks.</p>
+<p>Override this method to handle results after everything has been run. Keep in mind that
+this is run after all the tasks of this fold have been run but that in another node they
+may still be running.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.key_interrupt">
+<span class="sig-name descname"><span class="pre">key_interrupt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.key_interrupt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.key_interrupt" title="Permalink to this definition"></a></dt>
+<dd><p>Override this method to handle the status after a keyboard interrupt.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.get_cluster_ids">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">get_cluster_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_total</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.get_cluster_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.get_cluster_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Get the cluster id and the total number of nodes.</p>
+<p>If the cluster_id and cluster_total are not set, they are obtained from the environment
+variables passed by the SLURM task scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_id</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em>) – ID of the current node.</p></li>
+<li><p><strong>cluster_total</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>]</em>) – Total number of nodes nodes that we can use in the
+cluster.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple with current cluster ID and total number of nodes.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)">int</a>, <a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="slurmer.task_runner.Task.execute_tasks">
+<span class="sig-name descname"><span class="pre">execute_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_dirs_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/slurmer/task_runner.html#Task.execute_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slurmer.task_runner.Task.execute_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Execute all the tasks.</p>
+<p>The tasks are executed in a random order so do not rely on the order and use IDs instead.
+Even if the order is random, it is consistent across nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>make_dirs_only</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, only the directories will be created and
+execution will return. Defaults to False.</p></li>
+<li><p><strong>debug</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, the execution will be run in debug mode disabling all
+the parallelism. Defaults to False.</p></li>
+<li><p><strong>processes</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Number of processes to use. Pass None to use as many as the
+system has. Defaults to None.</p></li>
+<li><p><strong>no_bar</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, the progress bar will not be displayed. Defaults to
+False.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>, </em><em>optional</em>) – Description of the task. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3.7/library/exceptions.html#KeyboardInterrupt" title="(in Python v3.7)"><strong>KeyboardInterrupt</strong></a> – If a keyboard interrupt is passed, all the tasks are stopped and a
+    KeyboardInterrupt is raised.</p></li>
+<li><p><a class="reference internal" href="#slurmer.task_runner.TaskFailedError" title="slurmer.task_runner.TaskFailedError"><strong>TaskFailedError</strong></a> – If one of the tasks returns a strange result then a TaskFailedError is
+    raised.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The termination result of the tasks. If everything is fine, the result is
+Error.None.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#slurmer.task_runner.Error" title="slurmer.task_runner.Error">Error</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="slurmer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Joan Marcè i Igual.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
