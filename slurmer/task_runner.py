@@ -6,8 +6,9 @@ import multiprocessing as mp
 import os
 import random
 import signal
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Iterator, NamedTuple, Optional
+from typing import Iterator, Optional
 
 from tqdm.auto import tqdm
 
@@ -15,8 +16,13 @@ from tqdm.auto import tqdm
 class Error(Enum):
     """Type of termination error."""
 
+    #: No error occurred during execution
     NONE = auto()
+
+    #: A keyboard interrupt was received
     TERMINATE = auto()
+
+    #: A task produced and undesired output
     SYSTEM = auto()
 
 
@@ -43,17 +49,43 @@ def _sigterm_handler_soft(*_):
     raise KeyboardInterrupt
 
 
-class TaskParameters(NamedTuple):
-    """Named tuple containing the parameters that should be used by a task."""
+@dataclass
+class TaskParameters:
+    """Data class containing the parameters that should be used by a task.
+
+    Inherit this class to add parameters to your task.
+    """
 
     pass
 
 
-class TaskResult(NamedTuple):
+@dataclass
+class TaskResult:
+    """Data class containing the result of a task.
+
+    Inherit this class to add results to your task.
+
+    Example:
+        You can inherit this class as follows:
+
+        .. code-block:: python
+            :linenos:
+
+            from dataclass import dataclass
+            from slurmer import TaskResult
+
+            @dataclass
+            class MyTaskResult(TaskResult):
+                my_result: int
+
+    """
+
     pass
 
 
 class TaskFailedError(Exception):
+    """Exception thrown if one of the tasks fails."""
+
     pass
 
 
@@ -62,39 +94,51 @@ class Task(abc.ABC):
 
     def __init__(
         self,
-        description: str = "",
         cluster_id: Optional[int] = None,
         cluster_total: Optional[int] = None,
     ):
         """Initialize the class.
 
         Args:
-            description (str, optional): [description]. Defaults to "".
-            cluster_id (Optional[int], optional): [description]. Defaults to None.
-            cluster_total (Optional[int], optional): [description]. Defaults to None.
+            cluster_id: Id of the current node in the cluster, if None
+                the value is read from SLURM environment variable SLURM_ARRAY_TASK_ID. Defaults to
+                None.
+            cluster_total (Optional[int], optional): Number of allocated nodes in the cluster, if
+                None the value is read from the SLURM environment variable SLURM_ARRAY_TASK_MAX.
+                Defaults to None.
         """
-        self.description = description
-
-        self.cluster_id, self.cluster_total = Task._get_cluster_ids(cluster_id, cluster_total)
+        self.cluster_id, self.cluster_total = Task.get_cluster_ids(cluster_id, cluster_total)
 
     @abc.abstractmethod
-    def _generate_parameters(self) -> Iterator[TaskParameters]:
+    def generate_parameters(self) -> Iterator[TaskParameters]:
+        """Generate all the parameters for the different tasks to run.
+
+        This function **must be implemented**. It should return an iterator over all the parameters
+        that should be passed to the processor_function(). The number of tasks to run is determined
+        by the number of parameters returned by this method.
+        """
         pass
 
-    def _make_dirs(self):
+    def make_dirs(self):
         """Make directories before execution.
 
         If some directories need to be created before executing the tasks, inherit this method and
-        create the directories here.
+        create the directories here. *Override this function to add some behaviour*.
         """
         pass
 
     @staticmethod
     @abc.abstractmethod
-    def _processor_function(parameters: TaskParameters) -> Optional[TaskResult]:
+    def processor_function(parameters: TaskParameters) -> Optional[TaskResult]:
+        """Execute the task.
+
+        This function **must be implemented**. Here you can run the task that you want to run.
+        It should return a TaskResult if the execution worked as expected (even if it's just an
+        empty object), None if the execution failed and execution should be terminated.
+        """
         pass
 
-    def _process_output(self, result: TaskResult) -> bool:
+    def process_output(self, result: TaskResult) -> bool:
         """Process the generated output.
 
         Process the output generated with _processor_function() and evaluate whether execution
@@ -109,7 +153,7 @@ class Task(abc.ABC):
         """
         return False
 
-    def _after_run(self):
+    def after_run(self):
         """Handle results after running tasks.
 
         Override this method to handle results after everything has been run. Keep in mind that
@@ -118,16 +162,14 @@ class Task(abc.ABC):
         """
         pass
 
-    def _key_interrupt(self):
+    def key_interrupt(self):
         """Override this method to handle the status after a keyboard interrupt."""
         pass
 
     # Do not override anything past this point
 
     @staticmethod
-    def _get_cluster_ids(
-        cluster_id: Optional[int], cluster_total: Optional[int]
-    ) -> tuple[int, int]:
+    def get_cluster_ids(cluster_id: Optional[int], cluster_total: Optional[int]) -> tuple[int, int]:
         """Get the cluster id and the total number of nodes.
 
         If the cluster_id and cluster_total are not set, they are obtained from the environment
@@ -164,7 +206,7 @@ class Task(abc.ABC):
         return task_list
 
     def _obtain_current_fold(self):
-        params = sorted(set(self._generate_parameters()))
+        params = sorted(set(self.generate_parameters()))
         task_list = Task._tasks_distribution(len(params), self.cluster_total)
         task_begin, task_end = task_list[self.cluster_id]
 
@@ -186,6 +228,7 @@ class Task(abc.ABC):
         debug: bool = False,
         processes: int = None,
         no_bar: bool = False,
+        description: str = "",
     ) -> Error:
         """Execute all the tasks.
 
@@ -201,6 +244,7 @@ class Task(abc.ABC):
                 system has. Defaults to None.
             no_bar (bool, optional): If True, the progress bar will not be displayed. Defaults to
                 False.
+            description (str, optional): Description of the task. Defaults to "".
 
         Raises:
             KeyboardInterrupt: If a keyboard interrupt is passed, all the tasks are stopped and a
@@ -210,12 +254,12 @@ class Task(abc.ABC):
 
         Returns:
             Error: The termination result of the tasks. If everything is fine, the result is
-                Error.None.
+            Error.None.
         """
         global errored, pool
         params = self._obtain_current_fold()
 
-        self._make_dirs()
+        self.make_dirs()
         if make_dirs_only:
             return Error.NONE
 
@@ -228,10 +272,10 @@ class Task(abc.ABC):
 
         if debug:
             pool = _PoolDummy()
-            generator = map(self._processor_function, params)
+            generator = map(self.processor_function, params)
         else:
             pool = mp.Pool(processes=processes)
-            generator = pool.imap_unordered(self._processor_function, params)
+            generator = pool.imap_unordered(self.processor_function, params)
 
         signal.signal(signal.SIGTERM, _sigterm_handler_soft)
 
@@ -239,7 +283,7 @@ class Task(abc.ABC):
             for output in tqdm(
                 generator,
                 total=len(params),
-                desc=self.description,
+                desc=description,
                 disable=(len(params) <= 0) or no_bar,
                 smoothing=0.02,
             ):
@@ -248,7 +292,7 @@ class Task(abc.ABC):
                     errored = Error.TERMINATE
                     pool.terminate()
                     break
-                if self._process_output(output):
+                if self.process_output(output):
                     # This is caused by an actual error while running
                     errored = Error.SYSTEM
                     pool.terminate()
@@ -265,12 +309,12 @@ class Task(abc.ABC):
             pool.terminate()
             pool.join()
             if errored == Error.TERMINATE:
-                self._key_interrupt()
+                self.key_interrupt()
                 raise KeyboardInterrupt
             elif errored == Error.SYSTEM:
                 raise TaskFailedError("System returned non 0 exit code")
 
         pool.close()
-        self._after_run()
+        self.after_run()
         signal.signal(signal.SIGTERM, prev_signal)
         return errored
