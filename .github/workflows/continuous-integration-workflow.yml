@@ -6,7 +6,7 @@ on:
        - main
 
 jobs:
-  build-docs:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,8 +16,7 @@ jobs:
       - uses: Gr1N/setup-poetry@v7
       - run: poetry install
       - run: poetry run python doc/build.py
-      - run: poetry config http-basic.pypi ${{ secrets.PYPI_USER }} ${{ secrets.PYPI_TOKEN }}
-      - run: poetry publish --build
+      - run: poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_TOKEN }}
       - name: Deploy to GitHub pages
         uses: crazy-max/ghaction-github-pages@v2
         with:
