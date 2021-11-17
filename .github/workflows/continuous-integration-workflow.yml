@@ -20,4 +20,9 @@ jobs:
       - run: npm install gh-pages
       - run: poetry install
       - run: poetry run python doc/build.py
+      - run: npx gh-pages -d doc/build/html
+        with:
+          target_branch: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
