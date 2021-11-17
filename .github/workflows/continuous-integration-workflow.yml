@@ -16,6 +16,8 @@ jobs:
       - uses: Gr1N/setup-poetry@v7
       - run: poetry install
       - run: poetry run python doc/build.py
+      - run: poetry config http-basic.pypi ${{ secrets.PYPI_USER }} ${{ secrets.PYPI_TOKEN }}
+      - run: poetry publish --build
       - name: Deploy to GitHub pages
         uses: crazy-max/ghaction-github-pages@v2
         with:

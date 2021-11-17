@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "slurmer"
-version = "1.0.0"
+version = "1.0.2"
 description = "A package to schedule different tasks in parallel with cluster support."
 authors = ["Joan Marcè i Igual <J.Marce.i.Igual@tue.nl>"]
+readme = "README.md"
 license = "MIT"
+homepage = "https://jmigual.github.io/slurmer/"
+repository = "https://github.com/jmigual/slurmer"
 
 [tool.poetry.dependencies]
 python = "^3.7"
