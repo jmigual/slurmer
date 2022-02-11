@@ -116,7 +116,7 @@
     <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
 
 
-<div class="viewcode-block" id="TaskParameters"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.TaskParameters">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="TaskParameters"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.TaskParameters">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TaskParameters</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Data class containing the parameters that should be used by a task.</span>
 
@@ -126,7 +126,7 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="TaskResult"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.TaskResult">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="TaskResult"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.TaskResult">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TaskResult</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Data class containing the result of a task.</span>
 
@@ -208,12 +208,12 @@
 <div class="viewcode-block" id="Task.process_output"><a class="viewcode-back" href="../../api/slurmer.html#slurmer.Task.process_output">[docs]</a>    <span class="k">def</span> <span class="nf">process_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">TaskResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Process the generated output.</span>
 
-<span class="sd">        Process the output generated with _processor_function() and evaluate whether execution</span>
+<span class="sd">        Process the output generated with processor_function() and evaluate whether execution</span>
 <span class="sd">        should be terminated. Override this method if the default behaviour (return False) should</span>
 <span class="sd">        be changed.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            result (TaskResult): Result of the task as returned by the _processor_function()</span>
+<span class="sd">            result (TaskResult): Result of the task as returned by the processor_function()</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True if the execution should be terminated, False otherwise.</span>
