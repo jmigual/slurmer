@@ -49,7 +49,7 @@ def _sigterm_handler_soft(*_):
     raise KeyboardInterrupt
 
 
-@dataclass
+@dataclass(slots=True, order=True)
 class TaskParameters:
     """Data class containing the parameters that should be used by a task.
 
@@ -59,7 +59,7 @@ class TaskParameters:
     pass
 
 
-@dataclass
+@dataclass(slots=True)
 class TaskResult:
     """Data class containing the result of a task.
 
@@ -141,12 +141,12 @@ class Task(abc.ABC):
     def process_output(self, result: TaskResult) -> bool:
         """Process the generated output.
 
-        Process the output generated with _processor_function() and evaluate whether execution
+        Process the output generated with processor_function() and evaluate whether execution
         should be terminated. Override this method if the default behaviour (return False) should
         be changed.
 
         Args:
-            result (TaskResult): Result of the task as returned by the _processor_function()
+            result (TaskResult): Result of the task as returned by the processor_function()
 
         Returns:
             bool: True if the execution should be terminated, False otherwise.
