@@ -14,29 +14,54 @@ from slurmer import Task, TaskParameters, TaskResult
 class MyTaskParameters(TaskParameters):
     tid: int
 
+    def __hash__(self):
+        return hash(self.tid)
+
 
 class MyTask(Task):
     def generate_parameters(self) -> Iterator[TaskParameters]:
-        for i in range(10):
+        for i in range(4):
             yield MyTaskParameters(tid=i)
 
     @staticmethod
     def processor_function(_: TaskParameters) -> Optional[TaskResult]:
         # We disable the checks of security as sleep is safe. Also it is a "global" command.
-        subprocess.run(["sleep", "20"])  # noqa: S603,S607
+        subprocess.run(["sleep", "5"])  # noqa: S603,S607
         return TaskResult()
 
 
 def run_tasks():
-    # Create a task
-    task = MyTask()
-    task.execute_tasks()
+    try:
+        # Create a task
+        task = MyTask()
+        task.execute_tasks()
+    except KeyboardInterrupt:
+        print("We got a proper interrupt!")
 
 
 def test_sigint():
     p = mp.Process(target=run_tasks)
     p.start()
     sleep(1)
+    assert p.is_alive()
     pid = p.pid
     assert pid is not None
     os.kill(pid, signal.SIGINT)
+    p.join()
+    assert not p.is_alive()
+
+
+def test_sigterm():
+    p = mp.Process(target=run_tasks)
+    p.start()
+    sleep(1)
+    assert p.is_alive()
+    pid = p.pid
+    assert pid is not None
+    os.kill(pid, signal.SIGTERM)
+    p.join()
+    assert not p.is_alive()
+
+
+def test_run_tasks():
+    run_tasks()

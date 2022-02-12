@@ -8,7 +8,7 @@ import random
 import signal
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Iterator, Optional
+from typing import Callable, Iterator, Optional
 
 from tqdm.auto import tqdm
 
@@ -43,7 +43,7 @@ pool = _PoolDummy()
 
 def _sigterm_handler_soft(*_):
     global errored, pool
-    print("SIGTERM SOFT!!!")
+    print("SIGTERM SOFT")
     errored = Error.TERMINATE
     pool.terminate()
     raise KeyboardInterrupt
@@ -57,6 +57,12 @@ class TaskParameters:
     """
 
     pass
+
+
+@dataclass(slots=True)
+class _PrivateTaskParameters:
+    f: Callable[[TaskParameters], Optional[TaskResult]]
+    p: TaskParameters
 
 
 @dataclass(slots=True)
@@ -222,6 +228,13 @@ class Task(abc.ABC):
 
         return params[task_begin:task_end]
 
+    @staticmethod
+    def _process(p: _PrivateTaskParameters) -> Optional[TaskResult]:
+        try:
+            return p.f(p.p)
+        except KeyboardInterrupt:
+            return None
+
     def execute_tasks(
         self,
         make_dirs_only: bool = False,
@@ -258,26 +271,28 @@ class Task(abc.ABC):
         """
         global errored, pool
         params = self._obtain_current_fold()
+        params2 = (_PrivateTaskParameters(self.processor_function, p) for p in params)
 
         self.make_dirs()
         if make_dirs_only:
             return Error.NONE
 
-        prev_signal = signal.getsignal(signal.SIGTERM)
-        if prev_signal is None:
-            prev_signal = signal.SIG_DFL
-
         if len(params) <= 0:
             print("WARNING: No tasks have to be done, are you sure you did everything right?")
 
+        signal_list = [signal.SIGINT, signal.SIGTERM]
+        signals = {s: signal.getsignal(s) for s in signal_list}
+
         if debug:
             pool = _PoolDummy()
-            generator = map(self.processor_function, params)
+            generator = map(self._process, params2)
         else:
             pool = mp.Pool(processes=processes)
-            generator = pool.imap_unordered(self.processor_function, params)
+            generator = pool.imap_unordered(self._process, params2)
 
-        signal.signal(signal.SIGTERM, _sigterm_handler_soft)
+        errored = Error.NONE
+        for s in signal_list:
+            signal.signal(s, _sigterm_handler_soft)
 
         try:
             for output in tqdm(
@@ -316,5 +331,9 @@ class Task(abc.ABC):
 
         pool.close()
         self.after_run()
-        signal.signal(signal.SIGTERM, prev_signal)
+        for k, v in signals.items():
+            if v is None:
+                continue
+            signal.signal(k, v)
+
         return errored
