@@ -61,6 +61,10 @@ pycodestyle = ["+*", "-W503"]
 pyflakes = ["+*"]
 pylint = ["+*"]
 
+[tool.flakehell.exceptions."tests/"]
+flake8-docstrings = ["-*"]
+flake8-bandit = ["-S101"]
+
 [tool.black]
 line-length = 100
 
